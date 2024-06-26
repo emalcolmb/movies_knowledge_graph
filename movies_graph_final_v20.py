@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 import community as community_louvain
 import streamlit as st
 
-# Function to load and preprocess data
+# Function to load and preprocess data (assuming 'budget' column exists)
 def load_data():
     # Load movie dataset from CSV file
     data = pd.read_csv('movie_dataset.csv')
@@ -24,6 +24,7 @@ def load_data():
     data['director'].fillna('', inplace=True)  # Fill missing director information
     data['genres'].fillna('', inplace=True)  # Fill missing genre information
     data['revenue'].fillna(0, inplace=True)  # Fill missing revenue information with 0
+    data['budget'].fillna(0, inplace=True)  # Fill missing budget information with 0
     return data  # Return cleaned and sampled dataset
 
 # Initialize an empty undirected graph
@@ -34,7 +35,7 @@ def add_to_graph(row):
     movie_title = row['title']  # Extract movie title from the row
     
     # Add movie node with attributes
-    G.add_node(movie_title, type='movie', role='Movie', release_date=row['release_date'], revenue=row['revenue'], vote_average=row['vote_average'])
+    G.add_node(movie_title, type='movie', role='Movie', release_date=row['release_date'], revenue=row['revenue'], budget=row['budget'], vote_average=row['vote_average'])
     
     # Extract and add director node and edge if director information exists
     director = row['director'].strip()
@@ -112,6 +113,16 @@ if __name__ == "__main__":
         '700M - 1B': (700000000, 1000000000),
         'Above 1B': (1000000000, float('inf'))
     }
+
+    # Define budget tiers
+    budget_tiers = {
+        'All': (0, float('inf')),  # Adjusted to cover all budget ranges
+        'Under 50M': (0, 50000000),
+        '50M - 100M': (50000000, 100000000),
+        '100M - 200M': (100000000, 200000000),
+        '200M - 300M': (200000000, 300000000),
+        'Above 300M': (300000000, float('inf'))
+    }
     
     # Define vote average ranges
     vote_average_ranges = {
@@ -134,6 +145,9 @@ if __name__ == "__main__":
     # Sidebar selectbox for revenue tier
     selected_revenue_tier = st.sidebar.selectbox("Select revenue tier", list(revenue_tiers.keys()))
     
+    # Sidebar selectbox for budget tier
+    selected_budget_tier = st.sidebar.selectbox("Select budget tier", list(budget_tiers.keys()))
+    
     # Sidebar slider for vote average range
     selected_vote_range = st.sidebar.slider("Select vote average range", 0.0, 10.0, (0.0, 10.0), 0.1)
 
@@ -143,6 +157,10 @@ if __name__ == "__main__":
     # Apply revenue filter
     revenue_range = revenue_tiers[selected_revenue_tier]
     nodes_of_type = [node for node in nodes_of_type if G.nodes[node].get('revenue', 0) >= revenue_range[0] and G.nodes[node].get('revenue', 0) < revenue_range[1]]
+
+    # Apply budget filter
+    budget_range = budget_tiers[selected_budget_tier]
+    nodes_of_type = [node for node in nodes_of_type if G.nodes[node].get('budget', 0) >= budget_range[0] and G.nodes[node].get('budget', 0) < budget_range[1]]
 
     # Apply vote average filter
     vote_min, vote_max = selected_vote_range

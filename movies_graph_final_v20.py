@@ -20,7 +20,7 @@ def load_data():
     data = data.dropna(subset=['vote_average'])
     
     # Data cleaning and sampling
-    data = data.sample(frac=0.20)  # Sample 12.5% of the dataset
+    data = data.sample(frac=0.125)  # Sample 12.5% of the dataset
     data['director'].fillna('', inplace=True)  # Fill missing director information
     data['genres'].fillna('', inplace=True)  # Fill missing genre information
     data['revenue'].fillna(0, inplace=True)  # Fill missing revenue information with 0
